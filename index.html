@@ -14,6 +14,7 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #3b82f6; 
+            --accent-hover: #2563eb;
         }
 
         /* --- Global Reset & Typography --- */
@@ -25,6 +26,92 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            position: relative;
+        }
+
+        /* --- Auth Overlay (Sign Up / Login) --- */
+        #auth-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+        .auth-box {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        .auth-logo {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #ffffff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .auth-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+        
+        .auth-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .auth-btn:hover { background: var(--accent-hover); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
+        
+        .google-btn {
+            background: #ffffff;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+        .google-btn:hover {
+            background: #f1f5f9;
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+        }
+        .google-icon { width: 20px; height: 20px; }
+
+        .divider {
+            margin: 1.5rem 0;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--glass-border);
+            margin: 0 10px;
         }
 
         /* --- Sidebar Navigation --- */
@@ -100,6 +187,23 @@
 </head>
 <body>
 
+    <!-- Authentication Overlay (Sign Up / Login) -->
+    <div id="auth-overlay">
+        <div class="auth-box">
+            <div class="auth-logo">RexForge</div>
+            <p class="auth-subtitle">Premium Web Setup Agency</p>
+            
+            <button type="button" class="auth-btn google-btn" onclick="googleSignIn()">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="google-icon" alt="Google">
+                Sign in with Google
+            </button>
+            
+            <div class="divider">OR</div>
+            
+            <button type="button" class="auth-btn" onclick="demoLogin()">Enter as Guest</button>
+        </div>
+    </div>
+
     <!-- Sidebar Navigation -->
     <nav class="sidebar">
         <div class="logo">RexForge</div>
@@ -122,7 +226,7 @@
                 <div class="profile-setup">
                     <div class="avatar-placeholder">📸</div>
                     <div class="input-group">
-                        <input type="text" class="input-glass" placeholder="Your Display Name">
+                        <input type="text" id="user-display-name" class="input-glass" placeholder="Your Display Name">
                         <input type="text" class="input-glass" placeholder="Role (e.g., Lead Developer)">
                     </div>
                 </div>
@@ -137,7 +241,7 @@
             </div>
         </section>
 
-        <!-- Build Your Website Section (Placeholder for now) -->
+        <!-- Build Your Website Section -->
         <section id="build-sec" class="content-section">
             <div class="glass-panel">
                 <h2>Build Your Website</h2>
@@ -145,7 +249,7 @@
             </div>
         </section>
 
-        <!-- Your Work Section (Placeholder for now) -->
+        <!-- Your Work Section -->
         <section id="work-sec" class="content-section">
             <div class="glass-panel">
                 <h2>Your Work</h2>
@@ -153,7 +257,7 @@
             </div>
         </section>
 
-        <!-- Law & Policy Section (Placeholder for now) -->
+        <!-- Law & Policy Section -->
         <section id="policy-sec" class="content-section">
             <div class="glass-panel">
                 <h2>Law & Policy</h2>
@@ -163,20 +267,64 @@
 
     </main>
 
-    <!-- JavaScript to handle button clicks -->
-    <script>
-        function switchTab(sectionId, clickedElement) {
-            // Hide all sections
-            document.querySelectorAll('.content-section').forEach(sec => {
-                sec.classList.remove('active-section');
-            });
-            
-            // Remove 'active' highlight from all buttons
-            document.querySelectorAll('.nav-links li').forEach(li => {
-                li.classList.remove('active');
-            });
+    <!-- Firebase v9 Compat Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-            // Show the target section and highlight the clicked button
+    <!-- Application Logic -->
+    <script>
+        // Yaha aapka exact Firebase config add ho gaya hai
+        const firebaseConfig = {
+            apiKey: "AIzaSyDw66ODo8KyHXhMBr_YCBzZA3d9nHksxig",
+            authDomain: "rexforge.firebaseapp.com",
+            projectId: "rexforge",
+            storageBucket: "rexforge.firebasestorage.app",
+            messagingSenderId: "894206877252",
+            appId: "1:894206877252:web:dcaee1ab873eea4a2ae611"
+        };
+
+        // Firebase start karna aur Auth provider set karna
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+
+        // Asli Google Sign-In Function
+        function googleSignIn() {
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    console.log("Welcome!", user.displayName);
+                    
+                    // Profile section mein naam auto-fill karna
+                    document.getElementById('user-display-name').value = user.displayName;
+                    
+                    hideAuthOverlay();
+                })
+                .catch((error) => {
+                    console.error("Login Failed:", error.message);
+                    alert("Error: " + error.message + " - Make sure your site is running on a local server or hosted.");
+                });
+        }
+
+        // Demo login un logo ke liye jo bina Google account ke test karna chahte hain
+        function demoLogin() {
+            hideAuthOverlay();
+        }
+
+        // Auth screen hatane ka animation
+        function hideAuthOverlay() {
+            const overlay = document.getElementById('auth-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 500);
+        }
+        
+        // Dashboard Tab switching logic
+        function switchTab(sectionId, clickedElement) {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active-section'));
+            document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active-section');
             clickedElement.classList.add('active');
         }
