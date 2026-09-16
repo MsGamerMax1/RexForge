@@ -1,1 +1,240 @@
-<h1>Welcome to RexForge</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RexForge - Premium Web Setup</title>
+    <style>
+        /* --- Root Variables for Dark Glassmorphism --- */
+        :root {
+            --bg-color: #0b0f19; /* Deep dark background */
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-hover: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6; 
+        }
+
+        /* --- Global Reset & Typography --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar Navigation --- */
+        .sidebar {
+            width: 280px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            letter-spacing: 1px;
+            text-align: center;
+            background: linear-gradient(90deg, #ffffff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .nav-links li {
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+        .nav-links li:hover, .nav-links li.active {
+            background: var(--glass-hover);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Main Content Area --- */
+        .main-content {
+            flex: 1;
+            padding: 3rem;
+            overflow-y: auto;
+        }
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        /* --- Customizable Profile Section --- */
+        .profile-setup {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .avatar-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--glass-hover);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .avatar-placeholder:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex: 1;
+            max-width: 400px;
+        }
+        .input-glass {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 0.5rem;
+            font-size: 1.1rem;
+            outline: none;
+            transition: 0.3s ease;
+        }
+        .input-glass:focus {
+            border-bottom-color: var(--accent);
+        }
+
+        /* --- Premium Themes Grid --- */
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+        .theme-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .theme-card:hover {
+            border-color: var(--text-main);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+        .theme-preview {
+            height: 100px;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+        .theme-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        /* Theme Gradients */
+        .t-obsidian { background: linear-gradient(135deg, #121212, #2a2a2a); border: 1px solid #333; }
+        .t-ocean { background: linear-gradient(135deg, #0f172a, #1e3a8a); }
+        .t-aurora { background: linear-gradient(135deg, #2d1b69, #9d174d); }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="logo">RexForge</div>
+        <ul class="nav-links">
+            <li class="active">Profile</li>
+            <li>Build Your Website</li>
+            <li>Your Work</li>
+            <li>Law & Policy</li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        
+        <!-- Profile Section -->
+        <section id="profile-section">
+            
+            <div class="glass-panel">
+                <h2>Customizable Profile</h2>
+                <p class="subtitle">Set up your identity for the agency workspace.</p>
+                
+                <div class="profile-setup">
+                    <div class="avatar-placeholder" title="Click to upload avatar">📸</div>
+                    <div class="input-group">
+                        <input type="text" class="input-glass" placeholder="Your Display Name">
+                        <input type="text" class="input-glass" placeholder="Role (e.g., Lead Developer)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel">
+                <h2>Premium Themes</h2>
+                <p class="subtitle">Select a color scheme for your dashboard experience.</p>
+                
+                <div class="themes-grid">
+                    <div class="theme-card">
+                        <div class="theme-preview t-obsidian"></div>
+                        <div class="theme-title">Obsidian Dark</div>
+                    </div>
+                    <div class="theme-card">
+                        <div class="theme-preview t-ocean"></div>
+                        <div class="theme-title">Ocean Glass</div>
+                    </div>
+                    <div class="theme-card">
+                        <div class="theme-preview t-aurora"></div>
+                        <div class="theme-title">Neon Aurora</div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+</html>
