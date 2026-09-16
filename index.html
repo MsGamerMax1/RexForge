@@ -678,7 +678,7 @@ async function loadWork(){
 
       if (status === "Awaiting Advance Payment") {
         html += '<div class="flow">' +
-          '<p>Scan to pay the advance, then upload your payment screenshot.</p>' +
+          '<p>Pay <b>\u20B9' + esc(p.advanceAmount || 0) + '</b> advance (of \u20B9' + esc(p.totalPrice || 0) + ' total), then upload your payment screenshot.</p>' +
           (p.advanceQrUrl ? '<img class="qr-img" src="' + esc(p.advanceQrUrl) + '" alt="Advance payment QR code">' : '') +
           '<label class="btn btn-ghost btn-sm file-btn">Send Proof of Advance Payment' +
             '<input type="file" accept="image/*" hidden data-upload="advance" data-id="' + id + '"></label>' +
@@ -690,14 +690,17 @@ async function loadWork(){
       if (status === "In Progress") {
         const pct = Math.max(0, Math.min(100, p.progress || 0));
         html += '<div class="flow"><span class="progress-label">' + pct + '% complete</span>' +
-          '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
+          '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+          (p.remainingAmount ? '<p style="margin-top:.6rem;font-size:.8125rem">Remaining balance: \u20B9' + esc(p.remainingAmount) + '</p>' : '') +
+          '</div>';
       }
       if (status === "Work Completed") {
-        html += '<div class="flow"><p>Your site is built. We\'ll send the final payment QR shortly.</p></div>';
+        html += '<div class="flow"><p>Your site is built. We\'ll send the final payment QR shortly' +
+          (p.remainingAmount ? ' (\u20B9' + esc(p.remainingAmount) + ' remaining)' : '') + '.</p></div>';
       }
       if (status === "Awaiting Full Payment") {
         html += '<div class="flow">' +
-          '<p>Scan to pay the remaining balance, then upload proof.</p>' +
+          '<p>Pay <b>\u20B9' + esc(p.fullAmount || 0) + '</b> to complete your order, then upload proof.</p>' +
           (p.fullQrUrl ? '<img class="qr-img" src="' + esc(p.fullQrUrl) + '" alt="Full payment QR code">' : '') +
           '<label class="btn btn-ghost btn-sm file-btn">Send Proof of Full Payment' +
             '<input type="file" accept="image/*" hidden data-upload="full" data-id="' + id + '"></label>' +
@@ -789,7 +792,10 @@ function renderAdminFlow(status, p, id){
       '</div>';
   }
   if (status === "Accepted") {
-    return '<div class="admin-flow"><label class="btn btn-primary btn-sm file-btn">Send QR for Advance Payment' +
+    return '<div class="admin-flow"><div class="row2">' +
+      '<input type="number" min="0" placeholder="Total price (\u20B9)" data-total-input>' +
+      '<input type="number" min="0" placeholder="Advance amount (\u20B9)" data-advance-input>' +
+      '</div><label class="btn btn-primary btn-sm file-btn">Send QR for Advance Payment' +
       '<input type="file" accept="image/*" hidden data-upload="advance-qr"></label></div>';
   }
   if (status === "Awaiting Advance Payment") {
@@ -802,14 +808,17 @@ function renderAdminFlow(status, p, id){
   }
   if (status === "In Progress") {
     const pct = Math.max(0, Math.min(100, p.progress || 0));
-    return '<div class="admin-flow"><span class="progress-label">' + pct + '% complete</span>' +
+    return '<div class="admin-flow"><span class="progress-label">' + pct + '% complete \u2014 \u20B9' + esc(p.remainingAmount || 0) + ' remaining of \u20B9' + esc(p.totalPrice || 0) + '</span>' +
       '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
       '<div class="row2"><input type="number" min="0" max="100" value="' + pct + '" data-progress-input>' +
       '<button class="btn btn-sm btn-ghost" data-act="update-progress">Update %</button>' +
       '<button class="btn btn-sm btn-accept" data-act="mark-completed">Mark Work Completed</button></div></div>';
   }
   if (status === "Work Completed") {
-    return '<div class="admin-flow"><label class="btn btn-primary btn-sm file-btn">Send QR for Full Payment' +
+    const remaining = (p.totalPrice || 0) - (p.advanceAmount || 0);
+    return '<div class="admin-flow"><div class="row2">' +
+      '<input type="number" min="0" placeholder="Amount due (\u20B9)" value="' + (remaining > 0 ? remaining : "") + '" data-full-input>' +
+      '</div><label class="btn btn-primary btn-sm file-btn">Send QR for Full Payment' +
       '<input type="file" accept="image/*" hidden data-upload="full-qr"></label></div>';
   }
   if (status === "Awaiting Full Payment") {
@@ -835,13 +844,29 @@ $("adminList").addEventListener("change", async e => {
   const id = card.dataset.id;
   const label = input.closest("label");
   const was = label.textContent;
+
+  let extra = {};
+  if (kind === "advance-qr") {
+    const total = parseFloat(card.querySelector("[data-total-input]").value);
+    const advance = parseFloat(card.querySelector("[data-advance-input]").value);
+    if (!total || total <= 0)   { alert("Enter the total project price."); return; }
+    if (!advance || advance <= 0) { alert("Enter the advance amount."); return; }
+    if (advance > total) { alert("Advance can't be more than the total price."); return; }
+    extra = { totalPrice: total, advanceAmount: advance, remainingAmount: total - advance };
+  }
+  if (kind === "full-qr") {
+    const full = parseFloat(card.querySelector("[data-full-input]").value);
+    if (!full || full <= 0) { alert("Enter the amount due."); return; }
+    extra = { fullAmount: full };
+  }
+
   label.textContent = "Uploading…";
   try {
     const url = await uploadFile("qr/" + id + "/" + kind + ".jpg", input.files[0]);
     if (kind === "advance-qr") {
-      await updateDoc(doc(db, "projects", id), { status: "Awaiting Advance Payment", advanceQrUrl: url });
+      await updateDoc(doc(db, "projects", id), { status: "Awaiting Advance Payment", advanceQrUrl: url, ...extra });
     } else {
-      await updateDoc(doc(db, "projects", id), { status: "Awaiting Full Payment", fullQrUrl: url });
+      await updateDoc(doc(db, "projects", id), { status: "Awaiting Full Payment", fullQrUrl: url, ...extra });
     }
     loadAdmin();
   } catch (err) {
