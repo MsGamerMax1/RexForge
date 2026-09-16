@@ -18,6 +18,7 @@
 
 /* ---------- 1. TOKENS: LIGHT ---------- */
 :root{
+  color-scheme:light;
   --bg:#EEF4F7; --bg-deep:#E2ECF1;
   --aura-1:#6FD9EE; --aura-2:#A8C8FF; --aura-3:#BFF3F0; --aura-opacity:.55;
   --glass:rgba(255,255,255,.58);
@@ -37,6 +38,7 @@
 
 /* ---------- 2. TOKENS: DARK ---------- */
 [data-theme="dark"]{
+  color-scheme:dark;
   --bg:#04151C; --bg-deep:#020D12;
   --aura-1:#0E7A94; --aura-2:#123C6B; --aura-3:#0B5E5C; --aura-opacity:.62;
   --glass:rgba(255,255,255,.055);
@@ -101,6 +103,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .brand-name em{font-style:normal;font-weight:400;color:var(--ink-2)}
 
 .rail-nav{display:flex;flex-direction:column;gap:.15rem;position:relative}
+.rail-nav a[hidden]{display:none}
 .rail-nav a{display:flex;align-items:center;gap:.7rem;padding:.68rem .75rem;border-radius:12px;
   font-size:.9375rem;font-weight:500;color:var(--ink-2);
   transition:color .25s var(--ease),background-color .25s var(--ease)}
@@ -195,8 +198,28 @@ p{margin:0 0 1rem;max-width:60ch;color:var(--ink-2)}
   border-radius:var(--radius-pill);font-size:.8125rem;font-weight:600}
 .pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .pill.review{background:var(--accent-soft);color:var(--accent)}
+.pill.pending{background:rgba(214,150,20,.15);color:#B9820F}
 .pill.accepted{background:rgba(45,166,98,.14);color:#2DA662}
 .pill.rejected{background:rgba(194,64,47,.12);color:var(--danger)}
+
+.flow{margin-top:1rem;padding-top:1rem;border-top:1px dashed var(--glass-border)}
+.flow p{font-size:.875rem;margin:0 0 .7rem}
+.qr-img{width:150px;height:150px;object-fit:contain;border-radius:12px;
+  background:#fff;padding:8px;border:1px solid var(--glass-border);display:block;margin-bottom:.8rem}
+.progress-track{height:8px;border-radius:99px;background:var(--glass-border);overflow:hidden;margin:.5rem 0 .3rem}
+.progress-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .4s var(--ease)}
+.progress-label{font-size:.8125rem;color:var(--ink-3);font-weight:600}
+.file-btn{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer}
+.access-box{margin-top:.6rem;padding:.9rem 1rem;border-radius:var(--radius-sm);
+  background:var(--accent-soft);border:1px solid var(--glass-border);font-size:.875rem;
+  white-space:pre-wrap;color:var(--ink)}
+.proof-link{font-size:.8125rem;color:var(--accent);text-decoration:underline;display:inline-block;margin-bottom:.6rem}
+.admin-flow{margin-top:.9rem;padding-top:.9rem;border-top:1px dashed var(--glass-border);display:grid;gap:.6rem}
+.admin-flow .row2{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.admin-flow input[type="number"]{width:90px;padding:.5rem .6rem;border-radius:var(--radius-sm);
+  font:inherit;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--ink)}
+.admin-flow textarea{width:100%;min-height:90px;padding:.7rem .8rem;border-radius:var(--radius-sm);
+  font:inherit;font-size:.875rem;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--ink);resize:vertical}
 
 .reason{margin-top:.6rem;padding:.7rem .85rem;border-radius:var(--radius-sm);
   background:rgba(194,64,47,.08);border:1px solid rgba(194,64,47,.18);
@@ -235,6 +258,12 @@ p{margin:0 0 1rem;max-width:60ch;color:var(--ink-2)}
   font:inherit;font-size:.9375rem;color:var(--ink);
   background:var(--glass-strong);border:1px solid var(--glass-border);
   transition:border-color .2s var(--ease)}
+.field select{
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%234A6675' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .9rem center;padding-right:2.2rem}
+[data-theme="dark"] .field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2393B2BF' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
 .field textarea{min-height:120px;resize:vertical}
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--accent)}
 
@@ -480,6 +509,8 @@ import { initializeApp }
   from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
 import { getFirestore, doc, setDoc, addDoc, updateDoc, collection, query, where,
          orderBy, getDocs, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
@@ -499,8 +530,22 @@ const firebaseConfig = {
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
+const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
+
+const PENDING = ["Awaiting Advance Payment","Advance Proof Submitted","Awaiting Full Payment","Full Payment Proof Submitted"];
+function statusClass(s){
+  if (s === "Rejected") return "rejected";
+  if (s === "Delivered") return "accepted";
+  if (PENDING.includes(s)) return "pending";
+  return "review";
+}
+async function uploadFile(path, file){
+  const r = ref(storage, path);
+  await uploadBytes(r, file);
+  return getDownloadURL(r);
+}
 
 const $ = id => document.getElementById(id);
 let user = null;
@@ -608,14 +653,50 @@ async function loadWork(){
     let html = '<div class="cards">';
     snap.forEach(d => {
       const p = d.data();
+      const id = d.id;
       const status = p.status || "In review";
-      const cls = status === "Accepted" ? "accepted" : status === "Rejected" ? "rejected" : "review";
       html += '<div class="card"><h3>' + esc(p.name || "Untitled project") + '</h3>' +
               '<p>' + esc(p.type || "") + '</p>' +
-              '<span class="pill ' + cls + '">' + esc(status) + '</span>';
+              '<span class="pill ' + statusClass(status) + '">' + esc(status) + '</span>';
+
       if (status === "Rejected" && p.rejectionReason) {
         html += '<div class="reason"><b>Why:</b> ' + esc(p.rejectionReason) + '</div>';
       }
+
+      if (status === "Awaiting Advance Payment") {
+        html += '<div class="flow">' +
+          '<p>Scan to pay the advance, then upload your payment screenshot.</p>' +
+          (p.advanceQrUrl ? '<img class="qr-img" src="' + esc(p.advanceQrUrl) + '" alt="Advance payment QR code">' : '') +
+          '<label class="btn btn-ghost btn-sm file-btn">Send Proof of Advance Payment' +
+            '<input type="file" accept="image/*" hidden data-upload="advance" data-id="' + id + '"></label>' +
+          '</div>';
+      }
+      if (status === "Advance Proof Submitted") {
+        html += '<div class="flow"><p>Proof received. We\'ll confirm and start work shortly.</p></div>';
+      }
+      if (status === "In Progress") {
+        const pct = Math.max(0, Math.min(100, p.progress || 0));
+        html += '<div class="flow"><span class="progress-label">' + pct + '% complete</span>' +
+          '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
+      }
+      if (status === "Work Completed") {
+        html += '<div class="flow"><p>Your site is built. We\'ll send the final payment QR shortly.</p></div>';
+      }
+      if (status === "Awaiting Full Payment") {
+        html += '<div class="flow">' +
+          '<p>Scan to pay the remaining balance, then upload proof.</p>' +
+          (p.fullQrUrl ? '<img class="qr-img" src="' + esc(p.fullQrUrl) + '" alt="Full payment QR code">' : '') +
+          '<label class="btn btn-ghost btn-sm file-btn">Send Proof of Full Payment' +
+            '<input type="file" accept="image/*" hidden data-upload="full" data-id="' + id + '"></label>' +
+          '</div>';
+      }
+      if (status === "Full Payment Proof Submitted") {
+        html += '<div class="flow"><p>Proof received. We\'re preparing your website access details.</p></div>';
+      }
+      if (status === "Delivered" && p.accessInfo) {
+        html += '<div class="flow"><p><b>Your website access:</b></p><div class="access-box">' + esc(p.accessInfo) + '</div></div>';
+      }
+
       html += '</div>';
     });
     list.innerHTML = html + '</div>';
@@ -624,6 +705,30 @@ async function loadWork(){
     list.innerHTML = '<div class="panel empty"><p>Couldn\'t load projects. ' + esc(err.code || "") + '</p></div>';
   }
 }
+
+$("workList").addEventListener("change", async e => {
+  const input = e.target.closest("input[data-upload]");
+  if (!input || !input.files[0]) return;
+  const kind = input.dataset.upload; // "advance" | "full"
+  const id = input.dataset.id;
+  const file = input.files[0];
+  const label = input.closest("label");
+  const was = label.textContent;
+  label.textContent = "Uploading…";
+  try {
+    const url = await uploadFile("proofs/" + id + "/" + user.uid + "/" + kind + ".jpg", file);
+    if (kind === "advance") {
+      await updateDoc(doc(db, "projects", id), { status: "Advance Proof Submitted", advanceProofUrl: url });
+    } else {
+      await updateDoc(doc(db, "projects", id), { status: "Full Payment Proof Submitted", fullProofUrl: url });
+    }
+    loadWork();
+  } catch (err) {
+    console.error(err);
+    label.textContent = was;
+    alert("Upload failed: " + (err.code || err.message));
+  }
+});
 
 async function loadAdmin(){
   const list = $("adminList");
@@ -639,32 +744,99 @@ async function loadAdmin(){
       const p = d.data();
       const id = d.id;
       const status = p.status || "In review";
-      const cls = status === "Accepted" ? "accepted" : status === "Rejected" ? "rejected" : "review";
       html += '<div class="req" data-id="' + id + '">' +
         '<div class="req-top">' +
           '<div><h3 style="margin-bottom:.15rem">' + esc(p.name || "Untitled project") + '</h3>' +
           '<span class="req-who">' + esc(p.email || "unknown") + ' · ' + esc(p.type || "") + '</span></div>' +
-          '<span class="pill ' + cls + '">' + esc(status) + '</span>' +
+          '<span class="pill ' + statusClass(status) + '">' + esc(status) + '</span>' +
         '</div>' +
         '<div class="req-brief">' + esc(p.brief || "") + '</div>' +
-        (status === "Rejected" && p.rejectionReason
-          ? '<div class="reason"><b>Sent to client:</b> ' + esc(p.rejectionReason) + '</div>'
-          : '<div class="req-actions">' +
-              '<button class="btn btn-sm btn-accept" data-act="accept">Accept</button>' +
-              '<button class="btn btn-sm btn-reject" data-act="reject-toggle">Reject</button>' +
-            '</div>' +
-            '<div class="reject-box" data-box>' +
-              '<input type="text" maxlength="300" placeholder="Reason the client will see">' +
-              '<button class="btn btn-sm btn-reject" data-act="reject-send">Send rejection</button>' +
-            '</div>') +
+        renderAdminFlow(status, p, id) +
         '</div>';
     });
-    list.innerHTML = html;
+    list.innerHTML = html || '<div class="panel empty"><p>No requests yet.</p></div>';
   } catch (err) {
     console.error(err);
     list.innerHTML = '<div class="panel empty"><p>Couldn\'t load requests. ' + esc(err.code || "") + '</p></div>';
   }
 }
+
+function renderAdminFlow(status, p, id){
+  if (status === "Rejected") {
+    return '<div class="reason"><b>Sent to client:</b> ' + esc(p.rejectionReason || "") + '</div>';
+  }
+  if (status === "In review") {
+    return '<div class="req-actions">' +
+      '<button class="btn btn-sm btn-accept" data-act="accept">Accept</button>' +
+      '<button class="btn btn-sm btn-reject" data-act="reject-toggle">Reject</button>' +
+      '</div>' +
+      '<div class="reject-box" data-box>' +
+        '<input type="text" maxlength="300" placeholder="Reason the client will see">' +
+        '<button class="btn btn-sm btn-reject" data-act="reject-send">Send rejection</button>' +
+      '</div>';
+  }
+  if (status === "Accepted") {
+    return '<div class="admin-flow"><label class="btn btn-primary btn-sm file-btn">Send QR for Advance Payment' +
+      '<input type="file" accept="image/*" hidden data-upload="advance-qr"></label></div>';
+  }
+  if (status === "Awaiting Advance Payment") {
+    return '<div class="admin-flow"><p style="margin:0;font-size:.875rem;color:var(--ink-3)">Waiting on the client to pay and upload proof.</p></div>';
+  }
+  if (status === "Advance Proof Submitted") {
+    return '<div class="admin-flow">' +
+      (p.advanceProofUrl ? '<a class="proof-link" href="' + esc(p.advanceProofUrl) + '" target="_blank" rel="noopener">View payment proof</a>' : '') +
+      '<button class="btn btn-sm btn-accept" data-act="start-work">Confirm &amp; Start Work</button></div>';
+  }
+  if (status === "In Progress") {
+    const pct = Math.max(0, Math.min(100, p.progress || 0));
+    return '<div class="admin-flow"><span class="progress-label">' + pct + '% complete</span>' +
+      '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="row2"><input type="number" min="0" max="100" value="' + pct + '" data-progress-input>' +
+      '<button class="btn btn-sm btn-ghost" data-act="update-progress">Update %</button>' +
+      '<button class="btn btn-sm btn-accept" data-act="mark-completed">Mark Work Completed</button></div></div>';
+  }
+  if (status === "Work Completed") {
+    return '<div class="admin-flow"><label class="btn btn-primary btn-sm file-btn">Send QR for Full Payment' +
+      '<input type="file" accept="image/*" hidden data-upload="full-qr"></label></div>';
+  }
+  if (status === "Awaiting Full Payment") {
+    return '<div class="admin-flow"><p style="margin:0;font-size:.875rem;color:var(--ink-3)">Waiting on the client\'s final payment proof.</p></div>';
+  }
+  if (status === "Full Payment Proof Submitted") {
+    return '<div class="admin-flow">' +
+      (p.fullProofUrl ? '<a class="proof-link" href="' + esc(p.fullProofUrl) + '" target="_blank" rel="noopener">View payment proof</a>' : '') +
+      '<textarea data-access-input placeholder="Domain login, hosting login, admin panel access, anything the client needs."></textarea>' +
+      '<button class="btn btn-sm btn-accept" data-act="deliver">Send Access &amp; Mark Delivered</button></div>';
+  }
+  if (status === "Delivered") {
+    return '<div class="admin-flow"><div class="access-box">' + esc(p.accessInfo || "") + '</div></div>';
+  }
+  return "";
+}
+
+$("adminList").addEventListener("change", async e => {
+  const input = e.target.closest("input[data-upload]");
+  if (!input || !input.files[0]) return;
+  const kind = input.dataset.upload; // "advance-qr" | "full-qr"
+  const card = input.closest(".req");
+  const id = card.dataset.id;
+  const label = input.closest("label");
+  const was = label.textContent;
+  label.textContent = "Uploading…";
+  try {
+    const url = await uploadFile("qr/" + id + "/" + kind + ".jpg", input.files[0]);
+    if (kind === "advance-qr") {
+      await updateDoc(doc(db, "projects", id), { status: "Awaiting Advance Payment", advanceQrUrl: url });
+    } else {
+      await updateDoc(doc(db, "projects", id), { status: "Awaiting Full Payment", fullQrUrl: url });
+    }
+    loadAdmin();
+  } catch (err) {
+    console.error(err);
+    label.textContent = was;
+    alert("Upload failed: " + (err.code || err.message));
+  }
+});
 
 $("adminList").addEventListener("click", async e => {
   const btn = e.target.closest("button[data-act]");
@@ -678,34 +850,44 @@ $("adminList").addEventListener("click", async e => {
     return;
   }
 
-  if (act === "accept") {
+  const run = async (data) => {
     btn.disabled = true;
     try {
-      await updateDoc(doc(db, "projects", id), { status: "Accepted" });
+      await updateDoc(doc(db, "projects", id), data);
       loadAdmin();
     } catch (err) {
       console.error(err);
       btn.disabled = false;
-      alert("Couldn't accept: " + (err.code || err.message));
+      alert("Couldn't update: " + (err.code || err.message));
     }
-  }
+  };
+
+  if (act === "accept") return run({ status: "Accepted" });
 
   if (act === "reject-send") {
     const input = card.querySelector(".reject-box input");
     const reason = input.value.trim();
     if (reason.length < 3) { input.focus(); return; }
-    btn.disabled = true;
-    try {
-      await updateDoc(doc(db, "projects", id), {
-        status: "Rejected",
-        rejectionReason: reason.slice(0, 300)
-      });
-      loadAdmin();
-    } catch (err) {
-      console.error(err);
-      btn.disabled = false;
-      alert("Couldn't reject: " + (err.code || err.message));
-    }
+    return run({ status: "Rejected", rejectionReason: reason.slice(0, 300) });
+  }
+
+  if (act === "start-work") return run({ status: "In Progress", progress: 0 });
+
+  if (act === "update-progress") {
+    const num = card.querySelector("[data-progress-input]");
+    let pct = parseInt(num.value, 10);
+    if (isNaN(pct)) return;
+    pct = Math.max(0, Math.min(100, pct));
+    return run({ progress: pct });
+  }
+
+  if (act === "mark-completed") return run({ status: "Work Completed", progress: 100 });
+
+  if (act === "deliver") {
+    const box = card.querySelector("[data-access-input]");
+    const info = box.value.trim();
+    if (info.length < 5) { box.focus(); return; }
+    return run({ status: "Delivered", accessInfo: info.slice(0, 4000) });
   }
 });
 
