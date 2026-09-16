@@ -543,12 +543,21 @@ function statusClass(s){
 }
 async function uploadFile(path, file){
   const r = ref(storage, path);
-  await uploadBytes(r, file);
+  const timeout = new Promise((_, rej) =>
+    setTimeout(() => rej(new Error("Timed out reaching Firebase Storage — is Storage enabled for this project?")), 15000)
+  );
+  await Promise.race([uploadBytes(r, file), timeout]);
   return getDownloadURL(r);
 }
 
 const $ = id => document.getElementById(id);
 let user = null;
+
+function errorDetail(err){
+  const m = (err && err.message || "").match(/https:\/\/console\.firebase\.google\.com\S+/);
+  if (m) return 'This needs a one-time index. <a href="' + m[0] + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">Click here to create it</a>, wait a minute, then refresh.';
+  return esc((err && err.code) || "unknown error");
+}
 
 function esc(s){
   return String(s).replace(/[&<>"']/g, c =>
@@ -706,7 +715,7 @@ async function loadWork(){
     list.innerHTML = html + '</div>';
   } catch (err) {
     console.error(err);
-    list.innerHTML = '<div class="panel empty"><p>Couldn\'t load projects. ' + esc(err.code || "") + '</p></div>';
+    list.innerHTML = '<div class="panel empty"><p>Couldn\'t load projects. ' + errorDetail(err) + '</p></div>';
   }
 }
 
@@ -761,7 +770,7 @@ async function loadAdmin(){
     list.innerHTML = html || '<div class="panel empty"><p>No requests yet.</p></div>';
   } catch (err) {
     console.error(err);
-    list.innerHTML = '<div class="panel empty"><p>Couldn\'t load requests. ' + esc(err.code || "") + '</p></div>';
+    list.innerHTML = '<div class="panel empty"><p>Couldn\'t load requests. ' + errorDetail(err) + '</p></div>';
   }
 }
 
