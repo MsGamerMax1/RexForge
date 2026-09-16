@@ -337,7 +337,7 @@ p{margin:0 0 1rem;max-width:60ch;color:var(--ink-2)}
         <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/>
       </svg>Services</a>
 
-    <a href="#work">
+    <a href="#work" id="workLink">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8.5 7V5.5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2V7"/>
       </svg>Your Orders</a>
@@ -624,6 +624,8 @@ onAuthStateChanged(auth, async u => {
     const isAdmin = (u.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
     $("adminLink").hidden = !isAdmin;
     $("admin").hidden = !isAdmin;
+    $("workLink").hidden = isAdmin;
+    $("work").hidden = isAdmin;
     if (isAdmin) loadAdmin();
   } else {
     $("me").classList.remove("on");
@@ -633,6 +635,8 @@ onAuthStateChanged(auth, async u => {
     $("workList").innerHTML = "";
     $("adminLink").hidden = true;
     $("admin").hidden = true;
+    $("workLink").hidden = false;
+    $("work").hidden = false;
   }
 });
 
