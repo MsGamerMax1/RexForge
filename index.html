@@ -677,19 +677,23 @@ async function loadWork(){
   list.hidden = false;
   list.innerHTML = '<div class="panel empty"><p>Loading your projects…</p></div>';
   try {
+    // Only a "uid ==" filter here, no orderBy on a different field —
+    // this needs no composite index at all, unlike the previous version.
     const snap = await getDocs(query(
       collection(db, "projects"),
-      where("uid", "==", user.uid),
-      orderBy("createdAt", "desc")
+      where("uid", "==", user.uid)
     ));
     if (snap.empty){
       list.innerHTML = '<div class="panel empty"><p>No projects yet. Send your first brief below and it will appear here.</p></div>';
       return;
     }
+    const docs = [];
+    snap.forEach(d => docs.push({ id: d.id, ...d.data() }));
+    docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
     let html = '<div class="cards">';
-    snap.forEach(d => {
-      const p = d.data();
-      const id = d.id;
+    docs.forEach(p => {
+      const id = p.id;
       const status = p.status || "In review";
       html += '<div class="card"><h3>' + esc(p.name || "Untitled project") + '</h3>' +
               '<p>' + esc(p.type || "") + '</p>' +
