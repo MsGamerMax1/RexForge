@@ -702,6 +702,7 @@ async function loadWork(){
 
       if (status === "Awaiting Advance Payment") {
         html += '<div class="flow">' +
+          (p.advanceProofRejection ? '<div class="reason"><b>Your last proof was rejected:</b> ' + esc(p.advanceProofRejection) + '</div>' : '') +
           '<p>Pay <b>\u20B9' + esc(p.advanceAmount || 0) + '</b> advance (of \u20B9' + esc(p.totalPrice || 0) + ' total), then upload your payment screenshot.</p>' +
           (p.advanceQrUrl ? '<img class="qr-img" src="' + esc(p.advanceQrUrl) + '" alt="Advance payment QR code">' : '') +
           '<label class="btn btn-ghost btn-sm file-btn">Send Proof of Advance Payment' +
@@ -724,6 +725,7 @@ async function loadWork(){
       }
       if (status === "Awaiting Full Payment") {
         html += '<div class="flow">' +
+          (p.fullProofRejection ? '<div class="reason"><b>Your last proof was rejected:</b> ' + esc(p.fullProofRejection) + '</div>' : '') +
           '<p>Pay <b>\u20B9' + esc(p.fullAmount || 0) + '</b> to complete your order, then upload proof.</p>' +
           (p.fullQrUrl ? '<img class="qr-img" src="' + esc(p.fullQrUrl) + '" alt="Full payment QR code">' : '') +
           '<label class="btn btn-ghost btn-sm file-btn">Send Proof of Full Payment' +
@@ -823,12 +825,21 @@ function renderAdminFlow(status, p, id){
       '<input type="file" accept="image/*" hidden data-upload="advance-qr"></label></div>';
   }
   if (status === "Awaiting Advance Payment") {
-    return '<div class="admin-flow"><p style="margin:0;font-size:.875rem;color:var(--ink-3)">Waiting on the client to pay and upload proof.</p></div>';
+    return '<div class="admin-flow">' +
+      (p.advanceProofRejection ? '<div class="reason"><b>You rejected last proof:</b> ' + esc(p.advanceProofRejection) + '</div>' : '') +
+      '<p style="margin:0;font-size:.875rem;color:var(--ink-3)">Waiting on the client to pay and upload proof.</p></div>';
   }
   if (status === "Advance Proof Submitted") {
     return '<div class="admin-flow">' +
       (p.advanceProofUrl ? '<img class="qr-img" style="width:100%;max-width:280px;height:auto" src="' + esc(p.advanceProofUrl) + '" alt="Advance payment proof">' : '') +
-      '<button class="btn btn-sm btn-accept" data-act="start-work">Confirm &amp; Start Work</button></div>';
+      '<div class="req-actions">' +
+        '<button class="btn btn-sm btn-accept" data-act="start-work">Confirm &amp; Start Work</button>' +
+        '<button class="btn btn-sm btn-reject" data-act="reject-toggle">Reject Proof</button>' +
+      '</div>' +
+      '<div class="reject-box" data-box>' +
+        '<input type="text" maxlength="300" placeholder="What\'s wrong with this proof?">' +
+        '<button class="btn btn-sm btn-reject" data-act="reject-advance-proof">Send &amp; Ask Again</button>' +
+      '</div></div>';
   }
   if (status === "In Progress") {
     const pct = Math.max(0, Math.min(100, p.progress || 0));
@@ -846,11 +857,20 @@ function renderAdminFlow(status, p, id){
       '<input type="file" accept="image/*" hidden data-upload="full-qr"></label></div>';
   }
   if (status === "Awaiting Full Payment") {
-    return '<div class="admin-flow"><p style="margin:0;font-size:.875rem;color:var(--ink-3)">Waiting on the client\'s final payment proof.</p></div>';
+    return '<div class="admin-flow">' +
+      (p.fullProofRejection ? '<div class="reason"><b>You rejected last proof:</b> ' + esc(p.fullProofRejection) + '</div>' : '') +
+      '<p style="margin:0;font-size:.875rem;color:var(--ink-3)">Waiting on the client\'s final payment proof.</p></div>';
   }
   if (status === "Full Payment Proof Submitted") {
     return '<div class="admin-flow">' +
       (p.fullProofUrl ? '<img class="qr-img" style="width:100%;max-width:280px;height:auto" src="' + esc(p.fullProofUrl) + '" alt="Full payment proof">' : '') +
+      '<div class="req-actions">' +
+        '<button class="btn btn-sm btn-reject" data-act="reject-toggle">Reject Proof</button>' +
+      '</div>' +
+      '<div class="reject-box" data-box>' +
+        '<input type="text" maxlength="300" placeholder="What\'s wrong with this proof?">' +
+        '<button class="btn btn-sm btn-reject" data-act="reject-full-proof">Send &amp; Ask Again</button>' +
+      '</div>' +
       '<textarea data-access-input placeholder="Domain login, hosting login, admin panel access, anything the client needs."></textarea>' +
       '<button class="btn btn-sm btn-accept" data-act="deliver">Send Access &amp; Mark Delivered</button></div>';
   }
@@ -944,6 +964,28 @@ $("adminList").addEventListener("click", async e => {
   }
 
   if (act === "mark-completed") return run({ status: "Work Completed", progress: 100 });
+
+  if (act === "reject-advance-proof") {
+    const input = card.querySelector(".reject-box input");
+    const reason = input.value.trim();
+    if (reason.length < 3) { input.focus(); return; }
+    return run({
+      status: "Awaiting Advance Payment",
+      advanceProofRejection: reason.slice(0, 300),
+      advanceProofUrl: ""
+    });
+  }
+
+  if (act === "reject-full-proof") {
+    const input = card.querySelector(".reject-box input");
+    const reason = input.value.trim();
+    if (reason.length < 3) { input.focus(); return; }
+    return run({
+      status: "Awaiting Full Payment",
+      fullProofRejection: reason.slice(0, 300),
+      fullProofUrl: ""
+    });
+  }
 
   if (act === "deliver") {
     const box = card.querySelector("[data-access-input]");
