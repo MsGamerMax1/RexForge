@@ -96,8 +96,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .rail::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(to right,var(--glass-hi),transparent 60%);opacity:.5}
 
-.rail-top{display:flex;align-items:flex-start;justify-content:space-between}
-.rail-close{display:none;flex:none;margin-top:.4rem}
+.rail-top{display:flex;align-items:center;justify-content:space-between}
+button.rail-close{display:none;flex:none;margin-top:.4rem}
 .brand{display:flex;align-items:center;gap:.6rem;padding:.3rem .55rem 1.35rem;position:relative}
 .brand-mark{width:32px;height:32px;flex:none;display:grid;place-items:center}
 .brand-mark img{width:100%;height:100%;object-fit:contain}
@@ -320,7 +320,8 @@ p{margin:0 0 1rem;max-width:60ch;color:var(--ink-2)}
   .topbar{left:0;background:var(--glass);border-bottom:1px solid var(--glass-border);
     -webkit-backdrop-filter:blur(var(--blur));backdrop-filter:blur(var(--blur))}
   .burger{display:grid}
-  .rail-close{display:grid}
+  button.rail-close{display:grid;margin-top:0}
+  body.nav-open .burger{visibility:hidden}
   .topbar .icon-btn{border-color:transparent;background:transparent;
     -webkit-backdrop-filter:none;backdrop-filter:none}
 }
@@ -1093,6 +1094,7 @@ $("submitBrief").addEventListener("click", async e => {
   function setMenu(open){
     rail.classList.toggle("open", open);
     scrim.classList.toggle("on", open);
+    document.body.classList.toggle("nav-open", open);
     burger.setAttribute("aria-expanded", String(open));
     burger.setAttribute("aria-label", open ? "Close menu" : "Open menu");
   }
