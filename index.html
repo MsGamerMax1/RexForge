@@ -827,7 +827,7 @@ function renderAdminFlow(status, p, id){
   }
   if (status === "Advance Proof Submitted") {
     return '<div class="admin-flow">' +
-      (p.advanceProofUrl ? '<a class="proof-link" href="' + esc(p.advanceProofUrl) + '" target="_blank" rel="noopener">View payment proof</a>' : '') +
+      (p.advanceProofUrl ? '<img class="qr-img" style="width:100%;max-width:280px;height:auto" src="' + esc(p.advanceProofUrl) + '" alt="Advance payment proof">' : '') +
       '<button class="btn btn-sm btn-accept" data-act="start-work">Confirm &amp; Start Work</button></div>';
   }
   if (status === "In Progress") {
@@ -850,7 +850,7 @@ function renderAdminFlow(status, p, id){
   }
   if (status === "Full Payment Proof Submitted") {
     return '<div class="admin-flow">' +
-      (p.fullProofUrl ? '<a class="proof-link" href="' + esc(p.fullProofUrl) + '" target="_blank" rel="noopener">View payment proof</a>' : '') +
+      (p.fullProofUrl ? '<img class="qr-img" style="width:100%;max-width:280px;height:auto" src="' + esc(p.fullProofUrl) + '" alt="Full payment proof">' : '') +
       '<textarea data-access-input placeholder="Domain login, hosting login, admin panel access, anything the client needs."></textarea>' +
       '<button class="btn btn-sm btn-accept" data-act="deliver">Send Access &amp; Mark Delivered</button></div>';
   }
